@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: stix
+Source: http://www.stixfonts.org/
+
+Files: *
+Copyright: 2001-2010 STI Pub Companies <betatest@stixfonts.org>
+           1998-2003 MicroPress, Inc. (www.micropress-inc.com)
+           1990 Elsevier, Inc.

@@ -1,0 +1,76 @@
+{
+  "name": "loop-and-setup-study",
+  "title": "Churn model study",
+  "caption": "Churn study design: prepare data and a rule baseline once, tune and validate a gradient-boosted model over five folds, then accept it only if it beats the rule on the same holdout.",
+  "page": "a4-landscape",
+  "elements": [
+    {"type": "box", "id": "setup", "x": 46, "y": 16, "w": 1108, "h": 92, "tone": "peach", "number": 1, "title": "Problem setup", "lines": [
+      "predict churn within 90 days for 120,000 accounts from 24 months of history · labels from the cancellation log",
+      "same five folds and the same 2025 holdout for every method · proposed target: recall 0.80 at a 10% alert rate"]},
+
+    {"type": "group", "id": "loop", "x": 46, "y": 140, "w": 660, "h": 338, "tab": "Repeat for 5 folds"},
+    {"type": "group", "id": "once", "x": 722, "y": 140, "w": 432, "h": 338, "tab": "Set up once"},
+
+    {"type": "frame", "id": "model", "x": 76, "y": 168, "w": 588, "h": 104, "tone": "blue", "number": 2, "title": "Gradient-boosted model",
+     "cell_arrows": true, "cells": [
+       {"title": "Input", "line": "48 account features"},
+       {"title": "Split", "line": "fold *k* held out"},
+       {"title": "Model", "line": "XGBoost, depth 6"},
+       {"title": "Output", "line": "churn probability"}]},
+    {"type": "box", "id": "scores", "x": 76, "y": 296, "w": 290, "h": 76, "tone": "purple", "number": 3, "title": "Validation scores",
+     "size": 12, "lines": ["recall at 10% alerts, AUC", "on the held-out fold only"]},
+    {"type": "box", "id": "tune", "x": 390, "y": 296, "w": 274, "h": 76, "tone": "green", "number": 4, "title": "Tuning step",
+     "size": 12, "lines": ["Bayesian search over 6 settings", "early stopping on fold loss"]},
+    {"type": "diamond", "id": "runs", "cx": 221, "cy": 424, "w": 230, "h": 72, "title": "All folds done?", "lines": ["5 folds"]},
+    {"type": "diamond", "id": "budget", "cx": 527, "cy": 424, "w": 230, "h": 72, "title": "Trials used?", "lines": ["40 per fold"]},
+
+    {"type": "arrow", "from": "model.bottom@0.2466", "to": "scores.top"},
+    {"type": "arrow", "from": "scores.right", "to": "tune.left"},
+    {"type": "arrow", "from": "tune.bottom", "to": "budget.top"},
+    {"type": "arrow", "from": "budget.left", "to": "runs.right", "label": "YES"},
+    {"type": "label", "text": "save fold", "x": 374, "y": 439},
+    {"type": "arrow", "from": "budget.right", "to": "model.right", "via_x": 684, "label": "NO"},
+    {"type": "label", "text": "next trial", "x": 695, "y": 322, "rotate": true},
+    {"type": "arrow", "from": "runs.left", "to": "model.left", "via_x": 56, "style": "loop", "label": "NO", "label_at": [88, 417]},
+    {"type": "label", "text": "next fold", "x": 70, "y": 322, "rotate": true, "bold": true, "color": "green"},
+
+    {"type": "box", "id": "clean", "x": 742, "y": 168, "w": 392, "h": 72, "tone": "cyan", "number": 6, "title": "Data cleaning",
+     "lines": ["remove duplicates, fix dates, drop test accounts", "row counts logged before and after"]},
+    {"type": "box", "id": "feat", "x": 742, "y": 264, "w": 392, "h": 72, "tone": "cyan", "number": 7, "title": "Feature build",
+     "lines": ["48 features from 24 months of history", "frozen before any model sees labels"]},
+    {"type": "box", "id": "base", "x": 742, "y": 360, "w": 392, "h": 72, "tone": "cyan", "number": 8, "title": "Rule baseline",
+     "lines": ["current rule: no login in 30 days", "same folds, same metrics"]},
+    {"type": "arrow", "from": "clean.bottom", "to": "feat.top"},
+    {"type": "arrow", "from": "feat.bottom", "to": "base.top"},
+    {"type": "arrow", "from": "setup.bottom@0.293", "to": "model.top@0.5", "label": "uses features from 7"},
+    {"type": "arrow", "from": "setup.bottom@0.8051", "to": "clean.top"},
+
+    {"type": "box", "id": "final", "x": 46, "y": 496, "w": 660, "h": 72, "tone": "blue", "number": 5, "title": "Final model on holdout",
+     "lines": ["refit on all five folds with the chosen settings, score the 2025 holdout once",
+               "measured: recall at 10% alerts, AUC, alerts per week"]},
+    {"type": "box", "id": "hbase", "x": 722, "y": 496, "w": 432, "h": 72, "tone": "cyan", "number": 9, "title": "Baseline on holdout",
+     "lines": ["the rule applied to the same holdout", "measured: recall at the same alert rate"]},
+    {"type": "arrow", "from": "runs.bottom", "to": "final.top@0.2652", "label": "YES", "label_at": [232, 472], "label_anchor": "start"},
+    {"type": "arrow", "from": "base.bottom", "to": "hbase.top"},
+    {"type": "arrow", "from": "final.bottom@0.1848", "to": "acc.top", "label": "model scores"},
+    {"type": "arrow", "from": "hbase.bottom", "to": [170, 592], "via": [[938, 592]], "label": "baseline scores", "label_at": [928, 586], "label_anchor": "end"},
+
+    {"type": "diamond", "id": "acc", "cx": 168, "cy": 664, "w": 256, "h": 104, "title": "Beats baseline?", "lines": ["recall gain of 5 points", "at the same alert rate"]},
+    {"type": "row", "y": 624, "h": 80, "x0": 324, "x1": 1154, "gap": 24, "items": [
+      {"type": "box", "id": "errors", "tone": "gray", "number": 10, "title": "Error analysis", "size": 12,
+       "lines": ["missed churners by segment", "one feature change at a time"]},
+      {"type": "box", "id": "fair", "tone": "gray", "number": 11, "title": "Fairness check", "size": 12,
+       "lines": ["recall by region and plan type", "gap under 5 points (proposed)"]},
+      {"type": "box", "id": "pilot", "tone": "orange", "number": 12, "title": "Pilot plan", "size": 12, "thick": true,
+       "lines": ["two-month live pilot with support", "weekly review of every alert"]}
+    ]},
+    {"type": "arrow", "from": "acc.right", "to": "errors.left", "label": "YES"},
+    {"type": "arrow", "from": "acc.bottom", "to": "fail.top@0.4803", "label": "NO"},
+    {"type": "box", "id": "fail", "x": 46, "y": 744, "w": 254, "h": 80, "tone": "red", "title": "Not better than the rule",
+     "lines": ["recorded with its cause", "the rule stays in use"]},
+    {"type": "box", "id": "report", "x": 600, "y": 744, "w": 554, "h": 80, "tone": "orange", "number": 13, "title": "Study report", "thick": true,
+     "lines": ["model, scores per fold, fairness and the pilot plan,", "or the reason to keep the rule"]},
+    {"type": "arrow", "from": "fail.right", "to": "report.left", "label": "reported", "label_at": "middle"},
+    {"type": "arrow", "from": "pilot.bottom", "to": "report.top@0.7648"}
+  ]
+}
